@@ -165,13 +165,12 @@ p {
 				(entry-as-html entry)))))
 	    (princ "updated ")
 	    (print loc)
-	    (setf *current* (concatenate
+	    (when  (not (string= "" temp))
+	      (setf *current* (concatenate
 			     'string
 			     *current*
 			     name
-			     (if  (string= "" temp)
-				  "nothing"
-			       temp
+			     temp
 			       )))))
   (setf *page* (genpage *current* *old*)))
 (print "loaded all functions, starting server")
