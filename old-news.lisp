@@ -1,9 +1,10 @@
 (ql:quickload '(:cl-feedparser :drakma :hunchentoot :cl-json :alexandria :flexi-streams :cl-cron :cl-ppcre))
+(print "quickloads complete, defining globals and functions")
 
-(defparameter *config* '((:feeds "")
-			(:location . "BOU/59,80")))
+(defparameter *config* '((:feeds "") ;; list of rss feeds
+			(:location . "BOU/59,80"))) ;; a us weather location specifier.
 
-(defparameter *config-loc* "config.json")
+(defparameter *config-loc* "config.json") ;; this will have to do as "configurable enough"
 (defparameter *page* "")
 (defparameter *old* "")
 (defparameter *current* "")
@@ -21,6 +22,23 @@
 		     :if-does-not-exist :create)
       (write-sequence (cl-json:encode-json-alist-to-string *config*) f)))
 
+(defun add-feed (new-feed)
+  (handler-case
+      (progn
+	(fetch new-feed)
+	(setq *config* (acons :FEEDS
+			      (append (list new-feed)
+				      (cdr (assoc :FEEDS *config*)))
+			      (remove-if #'(lambda (x) (eq (car x) :FEEDS))
+					 *config*)))
+	    (save *config-loc*)
+	)
+    (t (c)
+      (declare (ignore c))
+      "can't, errors"
+      )))
+
+
 
 (defun fetch (url)
   ;; get the feed from a url and parse the thing.
@@ -32,9 +50,9 @@
    'string
    "<h2>"
    (gethash :title entry)
-   "</h2><br>"
+   "</h2><p>"
    (gethash :summary entry)
-   "<a href=\""(gethash :link entry)
+   "</p> <a href=\""(gethash :link entry)
    "\">go</a><br>"
    ))
 
@@ -87,13 +105,13 @@
 	   (alexandria:assoc-value data :properties) :periods)
 	  )))
        (concatenate 'string
-		    "<h1>Weather</h1><h3>Today</h3><br>"
+		    "<h1>Weather</h1><h3>Today</h3><p>"
 		    (car entries)
-		    "<br><h3>Tomorrow</h3><br>"
-		    (Cadr entries)
-		    "<br><h3>Day after Tomorrow</h3><br>"
+		    "</p><h3>Tomorrow</h3><p>"
+		    (cadr entries)
+		    "</p><h3>Day after Tomorrow</h3><p>"
 		    (caddr entries)
-		    "<br>")
+		    "</p>")
        ))
 
 
@@ -112,11 +130,19 @@
    "<(|/)img[^>]*>"
    (concatenate
    'string
-   "<html><title>Old News</title><body>"
+   "<html><title>Old News</title><style>
+div{
+ padding-right:15%;
+ padding-left:15%;
+}
+p {
+ font-size:130%;
+}
+    </style><body><div>"
    newstuff
    "<br><hr><br>"
    oldstuff
-   "</html></body>")
+   "</div></html></body>")
  "")
   )
 
@@ -128,7 +154,7 @@
 		   (string-date)
 		   "<hr>"
 		   (weather-as-html)))
-  (loop for loc in *feeds*
+  (loop for loc in (cdr (assoc :Feeds *config*))
        do (let* ((temp "")
 	      (feed (fetch loc))
 	      (name (source-data-as-html feed)))
@@ -148,18 +174,25 @@
 			       temp
 			       )))))
   (setf *page* (genpage *current* *old*)))
-
+(print "loaded all functions, starting server")
 
 (hunchentoot:define-easy-handler (news :uri "/news") ()
   (setf (hunchentoot:content-type*) "text/html")
   *page*)
+(hunchentoot:define-easy-handler (add :uri "/add") (feed)
+  (setf (hunchentoot:content-type*) "text/plain")
+  (when feed
+    (add-feed feed)))
 (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
+(print "Server started.Adding cl-cron entries")
 ;; server bits. This could legit work.
 ;; make a page for today, keep a page for yesterday, serve them both
 ;; consecutively.
 (cl-cron:make-cron-job 'update :minute 30 :hour 12)
 (cl-cron:start-cron)
+(print "cron complete. Loading setup files")
+(startup *config-loc*)
+(print *config*)
+(print "beginning update")
 (update)
-
-(loop do
-(sleep (* 60 60 24)))
+(loop (print (eval (read))))

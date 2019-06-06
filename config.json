@@ -1,5 +1,7 @@
 {"feeds": ["http://planet.lisp.org/rss20.xml",
 	   "https://idlewords.com/index.xml",
 	   "http://www.metafilter.com/mymefi/AF8CE07E0976FF4F/rss",
-	   "https://aiweirdness.com/rss"],
+	   "https://aiweirdness.com/rss",
+	   "http://tabletopwhale.com/feed.xml",
+	  "https://feeds.feedburner.com/codinghorror"],
  "location": "BOU/59,80"}
