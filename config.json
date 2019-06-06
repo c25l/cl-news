@@ -1,7 +1,9 @@
 {"feeds": ["http://planet.lisp.org/rss20.xml",
 	   "https://idlewords.com/index.xml",
 	   "http://www.metafilter.com/mymefi/AF8CE07E0976FF4F/rss",
+	   "http://procedural-generation.tumblr.com/rss",
 	   "https://aiweirdness.com/rss",
 	   "http://tabletopwhale.com/feed.xml",
-	  "https://feeds.feedburner.com/codinghorror"],
+	   "https://feeds.feedburner.com/codinghorror",
+	   "http://www.exurbe.com/?feed=rss2"],
  "location": "BOU/59,80"}
